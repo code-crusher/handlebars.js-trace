@@ -674,4 +674,93 @@ describe('partials', function () {
         );
     });
   });
+
+  describe('precompiled partials from another runtime', function () {
+    // See https://github.com/handlebars-lang/handlebars.js/issues/2095
+    it('should use the helpers of the runtime in which the partial was compiled', function () {
+      var partialRuntime = Handlebars.create();
+      partialRuntime.registerHelper('shout', function (str) {
+        return str + '!';
+      });
+      var compiledPartial = partialRuntime.compile('<b>{{shout text}}</b>');
+
+      var templateRuntime = Handlebars.create();
+      templateRuntime.registerPartial('fancy', compiledPartial);
+
+      var template = templateRuntime.compile('Hello {{> fancy}}');
+      expect(template({ text: 'world' })).toBe('Hello <b>world!</b>');
+    });
+
+    it('should use the partials of the runtime in which the partial was compiled', function () {
+      var partialRuntime = Handlebars.create();
+      partialRuntime.registerPartial('inner', 'very {{loud text}}');
+      partialRuntime.registerHelper('loud', function (str) {
+        return str.toUpperCase();
+      });
+      var compiledPartial = partialRuntime.compile('[{{> inner}}]');
+
+      var templateRuntime = Handlebars.create();
+      templateRuntime.registerPartial('outer', compiledPartial);
+
+      var template = templateRuntime.compile('{{> outer}}');
+      expect(template({ text: 'nice' })).toBe('[very NICE]');
+    });
+
+    it('should prefer the helpers of the partial over same-named helpers of the calling runtime', function () {
+      var partialRuntime = Handlebars.create();
+      partialRuntime.registerHelper('shout', function (str) {
+        return str + ' (partial runtime)';
+      });
+      var compiledPartial = partialRuntime.compile('{{shout text}}');
+
+      var templateRuntime = Handlebars.create();
+      templateRuntime.registerHelper('shout', function (str) {
+        return str + ' (template runtime)';
+      });
+      templateRuntime.registerPartial('fancy', compiledPartial);
+
+      var template = templateRuntime.compile('{{> fancy}} | {{shout text}}');
+      expect(template({ text: 'hi' })).toBe(
+        'hi (partial runtime) | hi (template runtime)'
+      );
+    });
+
+    it('should still have access to the helpers of the calling runtime', function () {
+      var partialRuntime = Handlebars.create();
+      partialRuntime.registerHelper('shout', function (str) {
+        return str + '!';
+      });
+      var compiledPartial = partialRuntime.compile(
+        '{{shout text}} {{whisper text}}'
+      );
+
+      var templateRuntime = Handlebars.create();
+      templateRuntime.registerHelper('whisper', function (str) {
+        return '(' + str + ')';
+      });
+      templateRuntime.registerPartial('fancy', compiledPartial);
+
+      var template = templateRuntime.compile('{{> fancy}}');
+      expect(template({ text: 'hello' })).toBe('hello! (hello)');
+    });
+
+    it('should work for precompiled templates created via "Handlebars.template"', function () {
+      var partialRuntime = Handlebars.create();
+      partialRuntime.registerHelper('shout', function (str) {
+        return str + '!';
+      });
+      var templateSpec = partialRuntime.precompile('<b>{{shout text}}</b>');
+      /* eslint-disable no-eval */
+      var compiledPartial = partialRuntime.template(
+        eval('(' + templateSpec + ')')
+      );
+      /* eslint-enable no-eval */
+
+      var templateRuntime = Handlebars.create();
+      templateRuntime.registerPartial('fancy', compiledPartial);
+
+      var template = templateRuntime.compile('Hello {{> fancy}}');
+      expect(template({ text: 'world' })).toBe('Hello <b>world!</b>');
+    });
+  });
 });
