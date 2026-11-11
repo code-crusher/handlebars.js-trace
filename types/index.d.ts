@@ -27,6 +27,8 @@ declare namespace Handlebars {
 
   export type Template<T = any> = TemplateDelegate<T> | string;
 
+  export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
   export interface RuntimeOptions {
     partial?: boolean;
     depths?: any[];
@@ -81,7 +83,7 @@ declare namespace Handlebars {
   export function K(): void;
   export function createFrame(object: any): any;
   export function blockParams(obj: any[], ids: any[]): any[];
-  export function log(level: number, obj: any): void;
+  export function log(level: number | LogLevel, obj: any): void;
 
   export function compile<T = any>(
     input: any,
@@ -260,6 +262,8 @@ export type BuiltinHelperName =
 
 export type CustomHelperName = string;
 
+export type LogLevel = Handlebars.LogLevel;
+
 export interface PrecompileOptions extends CompileOptions {
   srcName?: string;
   destName?: string;
@@ -279,11 +283,11 @@ export interface Logger {
   INFO: number;
   WARN: number;
   ERROR: number;
-  level: number;
+  level: number | Handlebars.LogLevel;
 
   methodMap: { [level: number]: string };
 
-  log(level: number, obj: string): void;
+  log(level: number | Handlebars.LogLevel, obj: string): void;
 }
 
 export type CompilerInfo = [number /* revision */, string /* versions */];

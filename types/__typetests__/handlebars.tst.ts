@@ -9,6 +9,7 @@ import {
   BuiltinHelperName,
   CustomHelperName,
   Logger,
+  LogLevel,
   CompilerInfo,
   hbs,
 } from 'handlebars';
@@ -443,7 +444,15 @@ describe('Logger', () => {
     expect(logger.INFO).type.toBe<number>();
     expect(logger.WARN).type.toBe<number>();
     expect(logger.ERROR).type.toBe<number>();
-    expect(logger.level).type.toBe<number>();
+    expect(logger.level).type.toBe<number | LogLevel>();
+  });
+
+  test('accepts level names', () => {
+    const logger = {} as Logger;
+    logger.level = 'warn';
+    logger.level = 2;
+    expect(logger.level).type.not.toRaiseError();
+    expect(logger.log('debug', 'msg')).type.toBe<void>();
   });
 
   test('has methodMap and log', () => {
@@ -481,6 +490,10 @@ describe('top-level exports', () => {
 
   test('CustomHelperName is string', () => {
     expect<CustomHelperName>().type.toBe<string>();
+  });
+
+  test('LogLevel is a string union', () => {
+    expect<LogLevel>().type.toBe<'debug' | 'info' | 'warn' | 'error'>();
   });
 
   test('KnownHelpers accepts builtin and custom helper names', () => {
