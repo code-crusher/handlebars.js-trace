@@ -4,6 +4,7 @@ Usage: handlebars.js [template|directory]...
 Options:
   -f, --output     Output File                                                                                        [string]
       --map        Source Map File                                                                                     [string]
+      --esm        Exports ECMAScript module style, path to Handlebars module (e.g. "handlebars/runtime")              [string]
   -k, --known      Known helpers                                                                                      [string]
   -o, --knownOnly  Known helpers only                                                                                [boolean]
   -m, --min        Minimize output                                                                                   [boolean]

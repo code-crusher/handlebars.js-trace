@@ -120,6 +120,65 @@ describe('bin/handlebars', function () {
     });
   });
 
+  describe('esm output', function () {
+    let files;
+
+    beforeEach(function () {
+      files = new FileTestHelper({ basePath: '.' });
+      files.createDir('tmp');
+    });
+
+    afterEach(function () {
+      files.cleanup();
+    });
+
+    it('--esm imports Handlebars and exports the templates', async function () {
+      const result = await execCommand(
+        `${cli} --esm handlebars/runtime spec/artifacts/empty.handlebars`
+      );
+
+      expect(result.stdout).toContain(
+        'import Handlebars from "handlebars/runtime";'
+      );
+      expect(result.stdout).toContain("templates['empty'] = template(");
+      expect(result.stdout).toContain('export default templates;');
+      expect(result.stdout).not.toContain('(function()');
+    });
+
+    it('--esm output can be imported as an ES module', async function () {
+      const outputFile = 'tmp/cli-test-esm.mjs';
+      files.registerForCleanup(outputFile);
+
+      await execCommand(
+        `${cli} --esm handlebars/runtime -i "<div>{{name}}</div>" -N greeting -f ${outputFile}`
+      );
+
+      const imported = await import(
+        new URL(`../../${outputFile}`, import.meta.url)
+      );
+      expect(imported.default.greeting({ name: 'World' })).toBe(
+        '<div>World</div>'
+      );
+    });
+
+    it('--esm exports partials', async function () {
+      const result = await execCommand(
+        `${cli} --esm handlebars/runtime -p spec/artifacts/partial.template.handlebars`
+      );
+
+      expect(result.stdout).toContain(
+        "Handlebars.partials['partial.template'] = template("
+      );
+      expect(result.stdout).toContain('export default Handlebars.partials;');
+    });
+
+    it('--esm requires a module path', async function () {
+      await expect(execCommand(`${cli} --esm`)).rejects.toThrow(
+        /Not enough arguments following: esm/
+      );
+    });
+  });
+
   describe('template options', function () {
     it('-e sets custom extension', async function () {
       const result = await execCommand(

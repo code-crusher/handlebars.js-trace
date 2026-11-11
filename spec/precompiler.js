@@ -129,6 +129,71 @@ describe('precompiler', function () {
     expect(log).toMatch(/\(function\(\)/);
   });
 
+  it('should output esm templates', async function () {
+    Handlebars.precompile = function () {
+      return 'esm';
+    };
+    await Precompiler.cli({
+      templates: [emptyTemplate],
+      esm: 'handlebars/runtime',
+    });
+    expect(log).toContain('import Handlebars from "handlebars/runtime";');
+    expect(log).toContain("templates['empty'] = template(esm);");
+    expect(log).toContain('export default templates;');
+    expect(log).not.toContain('(function()');
+  });
+
+  it('should escape the esm module path', async function () {
+    Handlebars.precompile = function () {
+      return 'esm';
+    };
+    await Precompiler.cli({
+      templates: [emptyTemplate],
+      esm: 'handlebars"runtime',
+    });
+    expect(log).toContain('import Handlebars from "handlebars\\"runtime";');
+  });
+
+  it('should output esm templates with a custom namespace', async function () {
+    Handlebars.precompile = function () {
+      return 'esm';
+    };
+    await Precompiler.cli({
+      templates: [emptyTemplate],
+      esm: 'handlebars/runtime',
+      namespace: 'CustomNamespace.templates',
+    });
+    expect(log).toContain(
+      'templates = CustomNamespace.templates = CustomNamespace.templates || {};'
+    );
+    expect(log).toContain('export default templates;');
+  });
+
+  it('should output esm partials', async function () {
+    Handlebars.precompile = function () {
+      return 'esm';
+    };
+    await Precompiler.cli({
+      templates: [emptyTemplate],
+      esm: 'handlebars/runtime',
+      partial: true,
+    });
+    expect(log).toContain("Handlebars.partials['empty'] = template(esm);");
+    expect(log).toContain('export default Handlebars.partials;');
+  });
+
+  it('should not force simple mode for unnamed esm templates', async function () {
+    Handlebars.precompile = function () {
+      return 'esm';
+    };
+    await expect(
+      Precompiler.cli({
+        templates: [{ source: '' }],
+        esm: 'handlebars/runtime',
+      })
+    ).rejects.toThrow('Name missing for template');
+  });
+
   it('should set data flag', async function () {
     Handlebars.precompile = function (data, options) {
       expect(options.data).toBe(true);

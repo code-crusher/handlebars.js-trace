@@ -16,6 +16,12 @@ const parser = yargs(process.argv.slice(2))
     type: 'string',
     description: 'Source Map File',
   })
+  .option('esm', {
+    type: 'string',
+    description:
+      'Exports ECMAScript module style, path to Handlebars module (e.g. "handlebars/runtime")',
+    requiresArg: true,
+  })
   .option('k', {
     type: 'string',
     description: 'Known helpers',
