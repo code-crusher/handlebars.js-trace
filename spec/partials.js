@@ -557,6 +557,64 @@ describe('partials', function () {
     }
   });
 
+  describe('partial hash and class instances (GH-2043)', function () {
+    function Car(data) {
+      this.maxSpeed = data.maxSpeed;
+      this.colour = data.colour;
+    }
+    Car.prototype.hasFourWheels = function () {
+      return true;
+    };
+
+    it('keeps the prototype when a partial is invoked with a hash', function () {
+      expectTemplate('{{#each this}}{{> car maxSpeed=50}}{{/each}}')
+        .withInput([
+          new Car({ maxSpeed: 40, colour: 'silver' }),
+          new Car({ maxSpeed: 30, colour: 'white' }),
+        ])
+        .withHelper('customHelper', function () {
+          return this instanceof Car && this.hasFourWheels()
+            ? 'four wheels'
+            : 'not a car';
+        })
+        .withPartial('car', '{{customHelper}} ({{colour}}) ')
+        .toCompileTo('four wheels (silver) four wheels (white) ');
+    });
+
+    it('lets the hash override properties of a class instance', function () {
+      expectTemplate('{{> car colour="pink"}}')
+        .withInput(new Car({ maxSpeed: 40, colour: 'silver' }))
+        .withPartial('car', '{{colour}}')
+        .toCompileTo('pink');
+    });
+
+    it('lets the hash override an inherited getter-only property', function () {
+      function Bike() {}
+      Object.defineProperty(Bike.prototype, 'colour', {
+        get: function () {
+          return 'silver';
+        },
+      });
+
+      expectTemplate('{{> bike colour="pink"}}')
+        .withInput(new Bike())
+        .withPartial('bike', '{{colour}}')
+        .toCompileTo('pink');
+    });
+
+    it('still flattens built-in objects into a plain context', function () {
+      expectTemplate('{{> partial hashValue=1}}')
+        .withInput(new Set([1, 2]))
+        .withPartial('partial', '{{hashValue}}')
+        .toCompileTo('1');
+
+      expectTemplate('{{> partial hashValue=1}}')
+        .withInput(new Date(0))
+        .withPartial('partial', '{{hashValue}}')
+        .toCompileTo('1');
+    });
+  });
+
   describe('standalone partials', function () {
     it('indented partials', function () {
       expectTemplate('Dudes:\n{{#dudes}}\n  {{>dude}}\n{{/dudes}}')
