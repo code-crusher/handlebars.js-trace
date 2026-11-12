@@ -203,7 +203,7 @@ describe('subexpressions', function () {
       .toCompileTo('LOLLOL!');
   });
 
-  it("subexpressions can't just be property lookups", function () {
+  it('subexpressions can resolve property lookups', function () {
     expectTemplate('{{foo (bar)}}!')
       .withInput({
         bar: 'LOL',
@@ -213,6 +213,29 @@ describe('subexpressions', function () {
           return val + val;
         },
       })
-      .toThrow();
+      .toCompileTo('LOLLOL!');
+  });
+
+  it('param-less subexpressions resolve nested paths', function () {
+    expectTemplate('{{foo (bar.baz)}}!')
+      .withInput({
+        bar: { baz: 'LOL' },
+      })
+      .withHelpers({
+        foo: function (val) {
+          return val + val;
+        },
+      })
+      .toCompileTo('LOLLOL!');
+  });
+
+  it('param-less subexpressions fall back to helperMissing', function () {
+    expectTemplate('{{foo (bar)}}!')
+      .withHelpers({
+        foo: function (val) {
+          return String(val);
+        },
+      })
+      .toCompileTo('undefined!');
   });
 });

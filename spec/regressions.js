@@ -502,4 +502,50 @@ describe('Regressions', function () {
         .toCompileTo('bar');
     });
   });
+
+  describe('GH-2034: param-less subexpressions referencing context values', function () {
+    it('should pass a non-empty context value to the if helper', function () {
+      expectTemplate('{{#if (name)}}yes{{else}}no{{/if}}')
+        .withInput({ name: 'hello' })
+        .toCompileTo('yes');
+    });
+
+    it('should treat an empty context value as falsy in the if helper', function () {
+      expectTemplate('{{#if (name)}}yes{{else}}no{{/if}}')
+        .withInput({ name: '' })
+        .toCompileTo('no');
+    });
+
+    it('should pass a non-empty context value to the unless helper', function () {
+      expectTemplate('{{#unless (name)}}yes{{else}}no{{/unless}}')
+        .withInput({ name: 'hello' })
+        .toCompileTo('no');
+    });
+
+    it('should treat an empty context value as falsy in the unless helper', function () {
+      expectTemplate('{{#unless (name)}}yes{{else}}no{{/unless}}')
+        .withInput({ name: '' })
+        .toCompileTo('yes');
+    });
+
+    it('should resolve a missing context value as undefined', function () {
+      expectTemplate('{{#if (name)}}yes{{else}}no{{/if}}')
+        .withInput({})
+        .toCompileTo('no');
+    });
+
+    it('should still invoke helper subexpressions', function () {
+      expectTemplate('{{blog (equal a b)}}')
+        .withInput({ a: 1, b: 1 })
+        .withHelpers({
+          blog: function (val) {
+            return 'val is ' + val;
+          },
+          equal: function (x, y) {
+            return x === y;
+          },
+        })
+        .toCompileTo('val is true');
+    });
+  });
 });
