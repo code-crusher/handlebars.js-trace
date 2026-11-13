@@ -151,6 +151,46 @@ describe('Regressions', function () {
     expectTemplate('{{a}}}').toThrow(Error, /Parse error on/);
   });
 
+  it('GH-2023: Parse errors preserve newlines in the displayed position', function () {
+    try {
+      Handlebars.compile('{{#if}\n  HELLO\n{{/if}}')();
+      expect.unreachable('Statement must throw exception');
+    } catch (err) {
+      expect(err.message.split('\nExpecting')[0]).toBe(
+        'Parse error on line 1:\n{{#if}\n-----^\n  HELLO\n{{/if}}'
+      );
+    }
+
+    try {
+      Handlebars.compile('hello\nmy\n{{foo}')();
+      expect.unreachable('Statement must throw exception');
+    } catch (err) {
+      expect(err.message.split('\nExpecting')[0]).toBe(
+        'Parse error on line 3:\nhello\nmy\n{{foo}\n-----^'
+      );
+    }
+
+    // Long input is truncated to keep the error message readable.
+    try {
+      Handlebars.compile('x'.repeat(40) + '\n' + 'y'.repeat(40) + '\n{{foo}')();
+      expect.unreachable('Statement must throw exception');
+    } catch (err) {
+      expect(err.message.split('\nExpecting')[0]).toBe(
+        'Parse error on line 3:\n...' + 'y'.repeat(14) + '\n{{foo}\n-----^'
+      );
+    }
+
+    // A long token is truncated as well.
+    try {
+      Handlebars.compile('{{foo}}{{^' + ' '.repeat(30) + '}}')();
+      expect.unreachable('Statement must throw exception');
+    } catch (err) {
+      expect(err.message.split('\nExpecting')[0]).toBe(
+        'Parse error on line 1:\n{{foo}}{{^                 ...\n-------^'
+      );
+    }
+  });
+
   it('GH-676: Using array in escaping mustache fails', function () {
     var data = { arr: [1, 2] };
 
