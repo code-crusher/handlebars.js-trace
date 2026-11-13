@@ -256,7 +256,8 @@ export type BuiltinHelperName =
   | 'unless'
   | 'with'
   | 'log'
-  | 'lookup';
+  | 'lookup'
+  | 'partialDefined';
 
 export type CustomHelperName = string;
 

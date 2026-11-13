@@ -476,6 +476,7 @@ describe('top-level exports', () => {
       | 'with'
       | 'log'
       | 'lookup'
+      | 'partialDefined'
     >();
   });
 

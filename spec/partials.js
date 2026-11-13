@@ -548,6 +548,85 @@ describe('partials', function () {
     });
   });
 
+  describe('partialDefined', function () {
+    it('should return true for registered partials', function () {
+      expectTemplate('{{partialDefined "myPartial"}}')
+        .withPartials({ myPartial: 'content' })
+        .toCompileTo('true');
+    });
+
+    it('should return false for undefined partials', function () {
+      expectTemplate('{{partialDefined "myPartial"}}').toCompileTo('false');
+    });
+
+    it('should return true for inline partials', function () {
+      expectTemplate(
+        '{{#*inline "myPartial"}}success{{/inline}}{{partialDefined "myPartial"}}'
+      ).toCompileTo('true');
+    });
+
+    it('should return false for inline partials outside their scope', function () {
+      expectTemplate(
+        '{{#with .}}{{#*inline "myPartial"}}success{{/inline}}{{/with}}{{partialDefined "myPartial"}}'
+      ).toCompileTo('false');
+    });
+
+    it('should render surrounding content conditionally (GH-1948)', function () {
+      expectTemplate(
+        '{{#if (partialDefined "nav")}}<div class="nav">{{> nav}}</div>{{/if}}<div class="content">static</div>'
+      ).toCompileTo('<div class="content">static</div>');
+
+      expectTemplate(
+        '{{#*inline "nav"}}My Nav{{/inline}}{{#if (partialDefined "nav")}}<div class="nav">{{> nav}}</div>{{/if}}<div class="content">static</div>'
+      ).toCompileTo(
+        '<div class="nav">My Nav</div><div class="content">static</div>'
+      );
+    });
+
+    it('should detect inline partials passed to a layout partial (GH-1948)', function () {
+      expectTemplate(
+        '{{#> layout}}{{#*inline "content"}}My Content{{/inline}}{{/layout}}'
+      )
+        .withPartials({
+          layout:
+            '{{#if (partialDefined "nav")}}<div class="nav">{{> nav}}</div>{{/if}}<div class="content">{{> content}}</div>',
+        })
+        .toCompileTo('<div class="content">My Content</div>');
+    });
+
+    it('should detect inline partials in partial block calls', function () {
+      expectTemplate(
+        '{{#> layout}}{{#*inline "nav"}}My Nav{{/inline}}{{#*inline "content"}}My Content{{/inline}}{{/layout}}'
+      )
+        .withPartials({
+          layout:
+            '{{#if (partialDefined "nav")}}<div class="nav">{{> nav}}</div>{{/if}}<div class="content">{{> content}}</div>',
+        })
+        .toCompileTo(
+          '<div class="nav">My Nav</div><div class="content">My Content</div>'
+        );
+    });
+
+    it('should throw when called with the wrong number of arguments', function () {
+      expectTemplate('{{partialDefined}}').toThrow(
+        Error,
+        /partialDefined requires exactly one argument/
+      );
+
+      expectTemplate('{{partialDefined "a" "b"}}').toThrow(
+        Error,
+        /partialDefined requires exactly one argument/
+      );
+    });
+
+    it('should work in knownHelpersOnly mode', function () {
+      expectTemplate('{{partialDefined "myPartial"}}')
+        .withPartials({ myPartial: 'content' })
+        .withCompileOptions({ knownHelpersOnly: true })
+        .toCompileTo('true');
+    });
+  });
+
   it('should pass compiler flags', function () {
     if (Handlebars.compile) {
       var env = Handlebars.create();
