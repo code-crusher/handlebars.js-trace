@@ -355,6 +355,20 @@ describe('Regressions', function () {
       .toCompileTo('parent=parent parent=parent ');
   });
 
+  it('GH-1762: Wrong context when iterating an array with undefined inside a conditional block helper', function () {
+    expectTemplate(
+      '{{#each arr}}{{#if 1}}{{@index}}: {{../foo}}|{{/if}}{{/each}}'
+    )
+      .withInput({ arr: [1, 2, void 0, 4], foo: 'foo' })
+      .toCompileTo('0: foo|1: foo|2: foo|3: foo|');
+
+    expectTemplate(
+      '{{#each arr}}{{#if 0}}{{^}}{{@index}}: {{../foo}}|{{/if}}{{/each}}'
+    )
+      .withInput({ arr: [1, 2, void 0, 4], foo: 'foo' })
+      .toCompileTo('0: foo|1: foo|2: foo|3: foo|');
+  });
+
   it('GH-1341: 4.0.7 release breaks {{#if @partial-block}} usage', function () {
     expectTemplate('template {{>partial}} template')
       .withPartials({
