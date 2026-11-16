@@ -4,13 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@handlebars/parser@2.2.2': 9c141357d836a2203cb73ccefa283a0873ea9377d834cb307e02d298bc3d7f9b
+
 importers:
 
   .:
     dependencies:
       '@handlebars/parser':
         specifier: ^2.2.2
-        version: 2.2.2
+        version: 2.2.2(patch_hash=9c141357d836a2203cb73ccefa283a0873ea9377d834cb307e02d298bc3d7f9b)
       neo-async:
         specifier: ^2.6.2
         version: 2.6.2
@@ -3313,7 +3316,7 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@handlebars/parser@2.2.2': {}
+  '@handlebars/parser@2.2.2(patch_hash=9c141357d836a2203cb73ccefa283a0873ea9377d834cb307e02d298bc3d7f9b)': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

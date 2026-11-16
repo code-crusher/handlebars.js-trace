@@ -2,6 +2,8 @@
 
 ## Development
 
+- fix: allow `../@var` (and `../../@var`, ...) to reference data variables from a parent data frame, e.g. `{{#each outer}}{{#each this}}{{../@index}}{{/each}}{{/each}}` (#1760)
+
 [Commits](https://github.com/handlebars-lang/handlebars.js/compare/v4.7.7...master)
 
 ## v4.7.7 - February 15th, 2021

@@ -146,6 +146,22 @@ describe('Regressions', function () {
     /* eslint-enable no-extend-native */
   });
 
+  it('GH-1760: parent data frame can be referenced as ../@index', function () {
+    expectTemplate(
+      '{{#each outer}}{{#each this}}{{../@index}}{{/each}}{{/each}}'
+    )
+      .withInput({ outer: [['a', 'b'], ['c']] })
+      .withMessage('../@index resolves against the parent data frame')
+      .toCompileTo('001');
+
+    expectTemplate(
+      '{{#each outer}}{{#each this}}{{@../index}}{{/each}}{{/each}}'
+    )
+      .withInput({ outer: [['a', 'b'], ['c']] })
+      .withMessage('@../index keeps working (previously supported syntax)')
+      .toCompileTo('001');
+  });
+
   it('GH-437: Matching escaping', function () {
     expectTemplate('{{{a}}').toThrow(Error, /Parse error on/);
     expectTemplate('{{a}}}').toThrow(Error, /Parse error on/);

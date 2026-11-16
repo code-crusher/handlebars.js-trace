@@ -307,6 +307,77 @@ describe('builtin helpers', function () {
         );
     });
 
+    it('each with ../@index reaching into the parent data frame', function () {
+      expectTemplate(
+        '{{#each goodbyes}}{{#each ../goodbyes}}{{../@index}}-{{@index}} {{/each}}{{/each}}'
+      )
+        .withInput({
+          goodbyes: [{ text: 'a' }, { text: 'b' }],
+        })
+        .withMessage('The ../@index path resolves to the parent data frame')
+        .toCompileTo('0-0 0-1 1-0 1-1 ');
+    });
+
+    it('each with ../@index in nested loops over objects', function () {
+      expectTemplate(
+        '{{#each outer}}{{#each this}}{{../@index}}:{{@index}} {{/each}}{{/each}}'
+      )
+        .withInput({ outer: [['a', 'b'], ['c']] })
+        .withMessage('The ../@index path resolves to the outer @index')
+        .toCompileTo('0:0 0:1 1:0 ');
+    });
+
+    it('each with ../@key reaching the parent key', function () {
+      expectTemplate(
+        '{{#each outer}}{{#each this}}{{../@key}}:{{@key}} {{/each}}{{/each}}'
+      )
+        .withInput({ outer: { x: { p: 1, q: 2 }, y: { r: 3 } } })
+        .withMessage('The ../@key path resolves to the outer key')
+        .toCompileTo('x:p x:q y:r ');
+    });
+
+    it('each with ../@first and ../@last reaching the parent frame', function () {
+      expectTemplate(
+        '{{#each outer}}{{#each this}}{{../@first}}{{../@last}}:{{@first}}{{@last}} {{/each}}{{/each}}'
+      )
+        .withInput({
+          outer: [
+            ['a', 'b'],
+            ['c', 'd'],
+          ],
+        })
+        .withMessage(
+          'The ../@first and ../@last paths resolve to the parent frame'
+        )
+        .toCompileTo(
+          'truefalse:truefalse truefalse:falsetrue falsetrue:truefalse falsetrue:falsetrue '
+        );
+    });
+
+    it('each with ../@index matches the @../index form', function () {
+      var input = { goodbyes: [{ text: 'a' }, { text: 'b' }] };
+      expectTemplate(
+        '{{#each goodbyes}}{{#each ../goodbyes}}{{../@index}}{{/each}}{{/each}}'
+      )
+        .withInput(input)
+        .toCompileTo('0011');
+
+      expectTemplate(
+        '{{#each goodbyes}}{{#each ../goodbyes}}{{@../index}}{{/each}}{{/each}}'
+      )
+        .withInput(input)
+        .toCompileTo('0011');
+    });
+
+    it('each with deeper ../../@index into the grandparent frame', function () {
+      expectTemplate(
+        '{{#each outer}}{{#each this}}{{#each this}}{{../../@index}}/{{../@index}}/{{@index}} {{/each}}{{/each}}{{/each}}'
+      )
+        .withInput({ outer: [[['a', 'b']], [['c']]] })
+        .withMessage('The ../../@index path resolves two frames up')
+        .toCompileTo('0/0/0 0/0/1 1/0/0 ');
+    });
+
     it('each with block params', function () {
       expectTemplate(
         '{{#each goodbyes as |value index|}}{{index}}. {{value.text}}! {{#each ../goodbyes as |childValue childIndex|}} {{index}} {{childIndex}}{{/each}} After {{index}} {{/each}}{{index}}cruel {{world}}!'

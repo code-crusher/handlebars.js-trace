@@ -1,2 +1,4 @@
 allowBuilds:
   husky: true
+patchedDependencies:
+  '@handlebars/parser@2.2.2': patches/@handlebars__parser@2.2.2.patch
