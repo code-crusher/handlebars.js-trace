@@ -237,6 +237,7 @@ export interface CompileOptions {
   knownHelpers?: KnownHelpers;
   knownHelpersOnly?: boolean;
   noEscape?: boolean;
+  nl2br?: boolean;
   strict?: boolean;
   assumeObjects?: boolean;
   preventIndent?: boolean;

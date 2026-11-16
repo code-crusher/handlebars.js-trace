@@ -127,6 +127,60 @@ describe('basic context', function () {
       .toCompileTo('12');
   });
 
+  it('does not convert newlines by default', function () {
+    expectTemplate('{{foo}}').withInput({ foo: 'a\nb' }).toCompileTo('a\nb');
+
+    expectTemplate('{{{foo}}}').withInput({ foo: 'a\nb' }).toCompileTo('a\nb');
+  });
+
+  it('converts newlines to <br /> with nl2br', function () {
+    expectTemplate('{{foo}}')
+      .withCompileOptions({ nl2br: true })
+      .withInput({ foo: 'a\nb' })
+      .toCompileTo('a<br />b');
+
+    expectTemplate('{{{foo}}}')
+      .withCompileOptions({ nl2br: true })
+      .withInput({ foo: 'a\nb' })
+      .toCompileTo('a<br />b');
+
+    expectTemplate('{{foo}}')
+      .withCompileOptions({ nl2br: true })
+      .withInput({ foo: 'a\n\nb' })
+      .toCompileTo('a<br /><br />b');
+  });
+
+  it('escapes values before converting newlines with nl2br', function () {
+    expectTemplate('{{foo}}')
+      .withCompileOptions({ nl2br: true })
+      .withInput({ foo: 'a<b>\nc' })
+      .toCompileTo('a&lt;b&gt;<br />c');
+  });
+
+  it('converts newlines in non-string and falsy values with nl2br', function () {
+    expectTemplate('{{foo}}')
+      .withCompileOptions({ nl2br: true })
+      .withInput({ foo: 12 })
+      .toCompileTo('12');
+
+    expectTemplate('{{foo}}')
+      .withCompileOptions({ nl2br: true })
+      .withInput({ foo: null })
+      .toCompileTo('');
+
+    expectTemplate('{{foo}}')
+      .withCompileOptions({ nl2br: true })
+      .withInput({})
+      .toCompileTo('');
+  });
+
+  it('converts newlines with nl2br when noEscape is set', function () {
+    expectTemplate('{{foo}}')
+      .withCompileOptions({ nl2br: true, noEscape: true })
+      .withInput({ foo: 'a\nb' })
+      .toCompileTo('a<br />b');
+  });
+
   it('false', function () {
     /* eslint-disable no-new-wrappers */
     expectTemplate('val1: {{val1}}, val2: {{val2}}')

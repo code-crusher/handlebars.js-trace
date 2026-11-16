@@ -36,7 +36,7 @@ describe('Handlebars.compile', () => {
 
   test('accepts CompileOptions', () => {
     expect(
-      Handlebars.compile('test', { strict: true, noEscape: true })
+      Handlebars.compile('test', { strict: true, noEscape: true, nl2br: true })
     ).type.not.toRaiseError();
   });
 

@@ -502,4 +502,20 @@ describe('Regressions', function () {
         .toCompileTo('bar');
     });
   });
+
+  describe('GH-1738: globally convert newlines in interpolated values to <br />', function () {
+    it('converts newlines in escaped values with the nl2br compile option', function () {
+      expectTemplate('{{foo}}')
+        .withCompileOptions({ nl2br: true })
+        .withInput({ foo: 'line1\nline2' })
+        .toCompileTo('line1<br />line2');
+    });
+
+    it('escapes before converting with nl2br', function () {
+      expectTemplate('{{foo}}')
+        .withCompileOptions({ nl2br: true })
+        .withInput({ foo: 'a<b>\nc' })
+        .toCompileTo('a&lt;b&gt;<br />c');
+    });
+  });
 });
