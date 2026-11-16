@@ -467,6 +467,48 @@ describe('Regressions', function () {
       .toCompileTo('foo');
   });
 
+  describe('GH-1686: Nested each with equal values skips some iterations', function () {
+    it('should iterate over every combination of nested each blocks', function () {
+      expectTemplate(
+        '_{{#each abc as | c1 |}}{{#each ../abc as | c2 |}}' +
+          '{{#each ../../abc as | c3 |}}{{c1}}{{c2}}{{c3}} ' +
+          '{{else}}! {{/each}}| {{/each}}{{/each}}_'
+      )
+        .withInput({ abc: ['A', 'B', 'C'] })
+        .toCompileTo(
+          '_AAA AAB AAC | ABA ABB ABC | ACA ACB ACC | ' +
+            'BAA BAB BAC | BBA BBB BBC | BCA BCB BCC | ' +
+            'CAA CAB CAC | CBA CBB CBC | CCA CCB CCC | _'
+        );
+    });
+
+    it('should keep the depth stack aligned for equal primitive values', function () {
+      expectTemplate(
+        '{{#each abc}}{{#each ../abc}}{{#each ../../abc}}' +
+          '{{../this}}{{this}} {{/each}}{{/each}}{{/each}}'
+      )
+        .withInput({ abc: ['A', 'B'] })
+        .toCompileTo('AA AB BA BB AA AB BA BB ');
+    });
+
+    it('should iterate over every combination when iterating objects', function () {
+      expectTemplate(
+        '{{#each abc as |c1|}}{{#each ../abc as |c2|}}{{c1}}{{c2}} ' +
+          '{{else}}! {{/each}}{{/each}}'
+      )
+        .withInput({ abc: { first: 'A', second: 'B' } })
+        .toCompileTo('AA AB BA BB ');
+    });
+
+    it('should not change the depth list for non-each blocks', function () {
+      expectTemplate(
+        '{{#with foo}}{{#if goodbye}}GOODBYE cruel {{../world}}!{{/if}}{{/with}}'
+      )
+        .withInput({ foo: { goodbye: true }, world: 'world' })
+        .toCompileTo('GOODBYE cruel world!');
+    });
+  });
+
   describe('GH-1598: Performance degradation for partials since v4.3.0', function () {
     // Do not run test for runs without compiler
     if (!Handlebars.compile) {
