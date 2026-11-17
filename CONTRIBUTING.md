@@ -85,30 +85,68 @@ You can use the following scripts to make sure that the CI job does not fail:
 - **pnpm run test:integration** will run integration tests (bundler compatibility with webpack, rollup, etc.)
   These tests only work on Linux.
 
+## Commits and Versioning
+
+This project uses [semantic-release](https://github.com/semantic-release/semantic-release)
+to automate versioning and the release process (see [#1676](https://github.com/handlebars-lang/handlebars.js/issues/1676)).
+The version number, the `CHANGELOG` entries and the GitHub release are determined
+automatically from the commit messages, following the
+[Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <subject>
+
+<type>: feat, fix, perf, refactor, docs, style, test, build, ci, chore, revert
+<scope>: optional, e.g. parser, compiler, runtime, cli
+```
+
+- `feat` triggers a new minor release, `fix`/`perf` a patch release, and `BREAKING CHANGE` (in the commit body or as `!` after the type) a major release.
+- All other types (`docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore`) do not trigger a release.
+- Since only the commit messages determine the version, please write them carefully. Use [Semantic Pull Requests](https://github.com/zeke/semantic-pull-requests) as a guide for PR titles as well (the PR title becomes the merge commit message).
+
+## Keeping dependencies up-to-date
+
+Dependency updates are automated:
+
+- [Renovate](https://github.com/apps/renovate) keeps the lockfile and version ranges up-to-date (see [`renovate.json`](renovate.json)). It is configured to update minor and patch updates automatically; major updates are opened as regular pull requests.
+- [Renovate Approve](https://github.com/apps/renovate-approve) and [Renovate Merge](https://github.com/apps/merge) approve and merge Renovate pull requests that pass CI, applying the appropriate conventional-commit type (`fix` for production updates, `chore` otherwise).
+- Since Renovate's merge commits are conventional commits, they flow through the semantic-release pipeline, so dependency updates which pass CI are released without manual effort.
+
 ## Releasing the latest version
 
-Before attempting the release Handlebars, please make sure that you have the following authorizations:
+Releases are fully automated via [semantic-release](https://github.com/semantic-release/semantic-release).
+When changes with conventional-commit messages (see above) are pushed or merged into the `master` branch,
+the ["Semantic Release" GitHub workflow](.github/workflows/semantic-release.yml):
 
-- Push-access to `handlebars-lang/handlebars.js`
-- Publishing rights on npmjs.com for the `handlebars` package
-- Publishing rights on gemfury for the `handlebars-source` package
-- Push-access to the repo for legacy package managers: `components/handlebars`
-- Push-access to the production-repo of the handlebars site: `handlebars-lang/handlebarsjs.com-github-pages`
+1. determines the next version from the commit messages,
+2. applies it to all places where the version occurs (see `tasks/update-versions.js`),
+3. writes the release notes into [release-notes.md](release-notes.md) and commits all these changes,
+4. publishes the release to npm and creates a GitHub release with the corresponding tag `v<version>`,
+5. triggers the ["Release" workflow](.github/workflows/release.yml) to publish the build artifacts to AWS S3.
 
-_When releasing a previous version of Handlebars, please look into the CONTRIBUNG.md in the corresponding branch._
+The npm publishing token and the `GITHUB_TOKEN` are configured in the repository secrets/actions settings.
 
-A full release may be completed with the following:
+The npm-package is published with the `release`-script:
+
+```
+pnpm run release
+```
+
+A manual release (e.g. re-releasing the current version or testing the release configuration locally)
+can be performed via the "Semantic Release" workflow (workflow_dispatch), or via:
 
 ```
 pnpm install --frozen-lockfile
-pnpm run build
-pnpm publish
+GITHUB_TOKEN=<token> pnpm exec semantic-release
 ```
 
-After the release, you should check that all places have really been updated. Especially verify that the `latest`-tags
+Use the `--dry-run` option to preview the version and release notes that would be published.
+
+### What you still need to do after a release
+
+Some places cannot be updated automatically. Please check that the `latest`-tags
 in those places still point to the latest version
 
-- [The npm-package](https://www.npmjs.com/package/handlebars) (check latest-tag)
 - [The bower package](https://github.com/components/handlebars.js) (check the package.json)
 - [The AWS S3 Bucket](https://s3.amazonaws.com/builds.handlebarsjs.com) (check latest-tag)
 - [RubyGems](https://rubygems.org/gems/handlebars-source)
@@ -120,6 +158,10 @@ and make a minimal change to the README. This will invoke a github-action that r
 the site, fetching the latest version-number from the npm-registry.
 (note that the default-branch of this repo is not the master and regular changes are done
 in the `handlebars-lang/docs`-repo).
+
+### Releasing a previous major version
+
+_When releasing a previous version of Handlebars, please look into the CONTRIBUTING.md in the corresponding branch._
 
 [generator-release]: https://github.com/walmartlabs/generator-release
 [pull-request]: https://github.com/handlebars-lang/handlebars.js/pull/new/master

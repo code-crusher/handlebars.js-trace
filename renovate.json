@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "rangeStrategy": "bump",
+  "semanticCommits": "enabled",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 5,
+  "labels": ["dependencies"],
+  "commitBody": "npm-dep-updater",
+  "packageRules": [
+    {
+      "description": "Group and auto-apply patch updates (behavior matches the former Dependabot config)",
+      "matchUpdateTypes": ["patch"],
+      "groupName": "patch updates",
+      "automerge": true
+    },
+    {
+      "description": "Auto-apply production minor updates (behavior matches the former Dependabot config)",
+      "matchUpdateTypes": ["minor"],
+      "matchDepTypes": ["dependencies", "peerDependencies"],
+      "automerge": true
+    },
+    {
+      "description": "Open PRs for major updates (manual review and merge)",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    }
+  ],
+  "automerge": true,
+  "platformAutomerge": true
+}

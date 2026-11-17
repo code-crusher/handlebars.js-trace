@@ -23,6 +23,17 @@ export async function add(path) {
   return git('add', '-f', path);
 }
 
+// Lists the files that have been modified or added but not yet committed,
+// like `git status --porcelain` (used to detect which files were touched by
+// the version-update).
+export async function status() {
+  const stdout = await git('status', '--porcelain');
+  return stdout
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== '')
+    .map((line) => line.slice(3).trim());
+}
+
 export async function commit(message) {
   return git('commit', '--message', message);
 }
