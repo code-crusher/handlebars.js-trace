@@ -397,6 +397,28 @@ describe('partials', function () {
         .toCompileTo('success');
     });
 
+    it('should support indented partial-block with a SafeString helper as the only content', function () {
+      expectTemplate('{{#> dude}}{{#safe}}{{/safe}}{{/dude}}\n')
+        .withHelpers({
+          safe: function () {
+            return new Handlebars.SafeString('{{test}}');
+          },
+        })
+        .withPartials({ dude: ' \n   {{> @partial-block }}' })
+        .toCompileTo(' \n   {{test}}\n');
+    });
+
+    it('should indent each line of a SafeString returned by a partial-block helper', function () {
+      expectTemplate('{{#> dude}}{{#safe}}{{/safe}}{{/dude}}')
+        .withHelpers({
+          safe: function () {
+            return new Handlebars.SafeString('line1\nline2');
+          },
+        })
+        .withPartials({ dude: ' \n   {{> @partial-block }}' })
+        .toCompileTo(' \n   line1\n   line2');
+    });
+
     it('should render nested partial blocks', function () {
       expectTemplate('<template>{{#> outer}}{{value}}{{/outer}}</template>')
         .withInput({ value: 'success' })
