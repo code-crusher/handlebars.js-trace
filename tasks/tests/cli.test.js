@@ -90,6 +90,53 @@ describe('bin/handlebars', function () {
       files.cleanup();
     });
 
+    it('compiles templates from a directory', async function () {
+      files.createFile('tmp/directory-test/first.handlebars', 'first');
+      files.createFile('tmp/directory-test/second.handlebars', 'second');
+
+      const result = await execCommand(`${cli} tmp/directory-test`);
+      expect(result.stdout).toContain("templates['first']");
+      expect(result.stdout).toContain("templates['second']");
+    });
+
+    it('compiles templates from a directory with subdirectories', async function () {
+      files.createFile('tmp/directory-test/top.handlebars', 'top');
+      files.createFile('tmp/directory-test/nested/inner.handlebars', 'inner');
+
+      const result = await execCommand(`${cli} tmp/directory-test`);
+      expect(result.stdout).toContain("templates['top']");
+      expect(result.stdout).toContain("templates['nested/inner']");
+    });
+
+    it('writes directory output to a file with -f', async function () {
+      const outputFile = 'tmp/directory-output.js';
+      files.registerForCleanup(outputFile);
+      files.createFile('tmp/directory-test/first.handlebars', 'first');
+
+      await execCommand(`${cli} tmp/directory-test -f ${outputFile}`);
+
+      expect(files.fileExists(outputFile)).toBe(true);
+      const content = files.getFileTextContent(outputFile);
+      expect(content).toContain("templates['first']");
+    });
+
+    it('compiles a directory with no templates matching the extension', async function () {
+      // Regression test for #2109: a directory input whose files don't match
+      // the default extension still compiles (an empty templates object)
+      // instead of printing the help menu.
+      files.createFile('tmp/directory-test/first.hbs', 'first');
+
+      const result = await execCommand(
+        `${cli} tmp/directory-test -f tmp/directory-output.js`
+      );
+
+      expect(result.stdout).not.toMatch(/Usage:/);
+      expect(files.fileExists('tmp/directory-output.js')).toBe(true);
+      expect(files.getFileTextContent('tmp/directory-output.js')).toContain(
+        'templates = Handlebars.templates = Handlebars.templates || {}'
+      );
+    });
+
     it('-f writes output to a file', async function () {
       const outputFile = 'tmp/cli-test-output.js';
       files.registerForCleanup(outputFile);
