@@ -62,6 +62,17 @@ describe('buildSuffixes', () => {
     expect(result).toEqual(['-4.7.0']);
   });
 
+  it('should keep the v-prefix of version tags', () => {
+    // getTagName() returns the raw git tag (e.g. "v4.7.9"), so the derived
+    // suffix and bucket keys keep that prefix - see issue #2176
+    const result = buildSuffixes({
+      isMaster: false,
+      headSha: 'abc123',
+      tagName: 'v4.7.9',
+    });
+    expect(result).toEqual(['-v4.7.9']);
+  });
+
   it('should add both master and tag suffixes when on master with a tag', () => {
     const result = buildSuffixes({
       isMaster: true,
@@ -217,5 +228,28 @@ describe('publish to S3', () => {
       'handlebars.runtime-4.7.0.js',
       'handlebars.runtime.min-4.7.0.js',
     ]);
+  });
+
+  it('should produce the exact keys referenced in issue #2176', async () => {
+    // the broken URLs were
+    // https://s3.amazonaws.com/builds.handlebarsjs.com/handlebars-v4.7.9.js
+    // and .../handlebars.runtime-v4.7.9.js - pins that the v-prefixed tag
+    // name is kept in the bucket keys
+    await publish(['-v4.7.9'], overrides);
+
+    expect(PUBLISHED_FILES.map((f) => getNameInBucket(f, '-v4.7.9'))).toEqual([
+      'handlebars-v4.7.9.js',
+      'handlebars.min-v4.7.9.js',
+      'handlebars.runtime-v4.7.9.js',
+      'handlebars.runtime.min-v4.7.9.js',
+    ]);
+
+    for (const key of [
+      'handlebars-v4.7.9.js',
+      'handlebars.runtime-v4.7.9.js',
+    ]) {
+      const body = await getObjectBody(key);
+      expect(body).toBeTruthy();
+    }
   });
 });
