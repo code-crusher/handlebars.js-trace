@@ -192,6 +192,11 @@ in those places still point to the latest version
 - [The AWS S3 Bucket](https://s3.amazonaws.com/builds.handlebarsjs.com) (check latest-tag)
 - [RubyGems](https://rubygems.org/gems/handlebars-source)
 
+Releases are not actively pushed to cdnjs (see #2170). The cdnjs-bot usually picks up new
+versions from the npm-registry, but it may lag behind. If the new release is missing from
+[cdnjs](https://cdnjs.com/libraries/handlebars.js) for a longer time, it can be requested
+in the cdnjs repository: https://github.com/cdnjs/cdnjs/blob/master/CONTRIBUTING.md
+
 When everything is OK, the **handlebars site** needs to be updated.
 
 Go to the master branch of the repo [handlebars-lang/docs](https://github.com/handlebars-lang/docs/tree/master)
