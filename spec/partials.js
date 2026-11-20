@@ -548,6 +548,72 @@ describe('partials', function () {
     });
   });
 
+  describe('fragments', function () {
+    var template =
+      '{{#*inline "archive-ui"}}<button>Archive {{name}}</button>{{/inline}}' +
+      '<div class="contact">{{name}}</div>';
+
+    it('should render the entire template by default', function () {
+      expectTemplate(template)
+        .withInput({ name: 'Yehuda' })
+        .toCompileTo('<div class="contact">Yehuda</div>');
+    });
+
+    it('should render only the requested fragment', function () {
+      expectTemplate(template)
+        .withInput({ name: 'Yehuda' })
+        .withRuntimeOptions({ fragment: 'archive-ui' })
+        .toCompileTo('<button>Archive Yehuda</button>');
+    });
+
+    it('should render a fragment from a precompiled template', function () {
+      var spec = Handlebars.precompile(template);
+      /* eslint-disable-next-line no-eval */
+      var compiled = Handlebars.template(eval('(' + spec + ')'));
+
+      expect(compiled({ name: 'Yehuda' })).toBe(
+        '<div class="contact">Yehuda</div>'
+      );
+      expect(compiled({ name: 'Yehuda' }, { fragment: 'archive-ui' })).toBe(
+        '<button>Archive Yehuda</button>'
+      );
+    });
+
+    it('should throw when the fragment does not exist', function () {
+      expectTemplate(template)
+        .withInput({ name: 'Yehuda' })
+        .withRuntimeOptions({ fragment: 'missing' })
+        .toThrow(Handlebars.Exception, /"missing" could not be found/);
+    });
+
+    it('should not resolve fragments from the prototype chain', function () {
+      expectTemplate(template)
+        .withInput({ name: 'Yehuda' })
+        .withRuntimeOptions({ fragment: 'toString' })
+        .toThrow(Handlebars.Exception, /"toString" could not be found/);
+    });
+
+    it('should make sibling fragments available', function () {
+      expectTemplate(
+        '{{#*inline "outer"}}{{> inner}}{{/inline}}' +
+          '{{#*inline "inner"}}<inner>{{name}}</inner>{{/inline}}' +
+          '<main>{{name}}</main>'
+      )
+        .withInput({ name: 'Yehuda' })
+        .withRuntimeOptions({ fragment: 'outer' })
+        .toCompileTo('<inner>Yehuda</inner>');
+    });
+
+    it('should not leak fragment partials into later renders', function () {
+      var compiled = Handlebars.compile(
+        '{{#*inline "archive-ui"}}fragment{{/inline}}body'
+      );
+
+      expect(compiled({}, { fragment: 'archive-ui' })).toBe('fragment');
+      expect(compiled({})).toBe('body');
+    });
+  });
+
   it('should pass compiler flags', function () {
     if (Handlebars.compile) {
       var env = Handlebars.create();

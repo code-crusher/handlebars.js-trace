@@ -362,6 +362,7 @@ describe('RuntimeOptions', () => {
         {},
         {
           partial: true,
+          fragment: 'archive-ui',
           depths: [{}],
           helpers: { myHelper: () => '' },
           partials: { link: '<a>{{name}}</a>' },

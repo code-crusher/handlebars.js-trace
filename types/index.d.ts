@@ -29,6 +29,7 @@ declare namespace Handlebars {
 
   export interface RuntimeOptions {
     partial?: boolean;
+    fragment?: string;
     depths?: any[];
     helpers?: { [name: string]: Function };
     partials?: { [name: string]: Template };
