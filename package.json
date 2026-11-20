@@ -52,6 +52,7 @@
     "build": "pnpm run clean && rspack build",
     "release": "pnpm run build",
     "publish:aws": "pnpm run build && pnpm run test:tasks && node tasks/publish-to-aws.js",
+    "publish:jsr": "pnpm run test:tasks && node tasks/publish-to-jsr.js",
     "format": "oxfmt --write . && oxlint --fix .",
     "lint": "pnpm run lint:oxlint && pnpm run lint:format && pnpm run lint:types && pnpm run lint:compat",
     "lint:oxlint": "oxlint --max-warnings 0 .",

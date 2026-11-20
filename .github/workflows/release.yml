@@ -41,3 +41,38 @@ jobs:
           S3_REGION: 'us-east-1'
           S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
           S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+
+  publish-jsr:
+    # Publishes the package to https://jsr.io (issue #2081). JSR requires the
+    # "@handlebars" scope to exist and the package to be linked to this
+    # repository in its settings before the first publish.
+    name: Publish to JSR
+    runs-on: 'ubuntu-latest'
+    # Only version tags are published; the publish task is a no-op otherwise.
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: read
+      # The OIDC ID token is used to authenticate with JSR. This lets JSR
+      # generate a provenance attestation that links the published package to
+      # this repository and the exact build that produced it.
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish
+        run: pnpm run publish:jsr

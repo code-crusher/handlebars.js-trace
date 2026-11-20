@@ -66,6 +66,14 @@ jobs:
       - name: Test (Publish)
         run: pnpm exec vitest run --project publish
 
+      # Validates that the package is publishable on https://jsr.io (issue
+      # #2081): `jsr publish --dry-run` resolves the module graph from
+      # jsr.json, checks the public API for "slow types" and lists the files
+      # that would be uploaded. Nothing is uploaded and no credentials are
+      # needed.
+      - name: Test (JSR)
+        run: pnpm exec vitest run --project tasks tasks/tests/publish-to-jsr.test.js
+
       - name: Test (Integration)
         if: matrix.operating-system == 'ubuntu-latest'
         run: pnpm run test:integration

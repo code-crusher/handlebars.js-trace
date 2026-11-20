@@ -288,10 +288,12 @@ export interface Logger {
 
 export type CompilerInfo = [number /* revision */, string /* versions */];
 
-declare module 'handlebars/runtime' {
-  const runtime: typeof Handlebars;
-  export default runtime;
-}
+// The types for "handlebars/runtime" are provided by the separate
+// runtime.d.ts declaration file. The previous ambient module declaration
+// ("declare module 'handlebars/runtime'") was removed because JSR does not
+// support ambient modules; the declaration file is picked up via the
+// "types" condition of the "./runtime" export in package.json and via the
+// @ts-self-types directive in runtime.js.
 
 // Named exports matching lib/index.js for ESM/CJS interop
 export const create: typeof Handlebars.create;

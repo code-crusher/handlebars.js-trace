@@ -17,6 +17,8 @@ Checkout the official Handlebars docs site at
 
 See our [installation documentation](https://handlebarsjs.com/guide/installation/).
 
+The package is also available on [JSR](https://jsr.io) as [`@handlebars/handlebars`](https://jsr.io/@handlebars/handlebars), so it can be installed with Deno (`jsr add @handlebars/handlebars`) or via npm (`npx jsr add @handlebars/handlebars`).
+
 ## Usage
 
 In general, the syntax of Handlebars.js templates is a superset

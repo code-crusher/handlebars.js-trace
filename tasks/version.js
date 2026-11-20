@@ -39,6 +39,12 @@ async function main() {
       regex: /<version>.*<\/version>/,
       replacement: `<version>${version}</version>`,
     },
+    {
+      // The version of the package that is published to https://jsr.io
+      path: 'jsr.json',
+      regex: /"version":.*/,
+      replacement: `"version": "${version}",`,
+    },
   ];
 
   await Promise.all(

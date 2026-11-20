@@ -1,0 +1,30 @@
+{
+  "$schema": "https://jsr.io/schema/config-file.v1.json",
+  "name": "@handlebars/handlebars",
+  "version": "5.0.0-alpha.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./lib/index.js",
+    "./runtime": "./runtime.js"
+  },
+  "publish": {
+    "exclude": [
+      ".*",
+      "components/**",
+      "coverage/**",
+      "dist/**",
+      "docs/**",
+      "node_modules/**",
+      "spec/**",
+      "tasks/**",
+      "tests/**",
+      "types/__typetests__/**",
+      "eslint.config.js",
+      "rspack.config.js",
+      "vitest.config.js",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      "release-notes.md"
+    ]
+  }
+}
