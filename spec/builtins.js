@@ -309,7 +309,7 @@ describe('builtin helpers', function () {
 
     it('each with block params', function () {
       expectTemplate(
-        '{{#each goodbyes as |value index|}}{{index}}. {{value.text}}! {{#each ../goodbyes as |childValue childIndex|}} {{index}} {{childIndex}}{{/each}} After {{index}} {{/each}}{{index}}cruel {{world}}!'
+        '{{#each goodbyes as |value index|}}{{index}}. {{value.text}}! {{#each goodbyes as |childValue childIndex|}} {{index}} {{childIndex}}{{/each}} After {{index}} {{/each}}{{index}}cruel {{world}}!'
       )
         .withInput({
           goodbyes: [{ text: 'goodbye' }, { text: 'Goodbye' }],
@@ -318,6 +318,54 @@ describe('builtin helpers', function () {
         .toCompileTo(
           '0. goodbye!  0 0 0 1 After 0 1. Goodbye!  1 0 1 1 After 1 cruel world!'
         );
+    });
+
+    it('each with block params does not change the current context', function () {
+      // GH-2067: the iteration value is only exposed through the block
+      // parameter, so properties of the surrounding context stay reachable.
+      expectTemplate(
+        '{{someVal}}{{#each profiles as |profile|}}{{profile.username}}:{{someVal}};{{/each}}{{someVal}}'
+      )
+        .withInput({
+          someVal: 'value',
+          profiles: [{ username: 'a' }, { username: 'b' }],
+        })
+        .toCompileTo('valuea:value;b:value;value');
+    });
+
+    it('each with block params keeps the context of a parent helper', function () {
+      expectTemplate(
+        '{{#with wrapper}}{{#each list as |item|}}{{../name}}{{item}}{{/each}}{{/with}}'
+      )
+        .withInput({ name: 'root', wrapper: { list: ['a'] } })
+        .toCompileTo('roota');
+    });
+
+    it('each with nested block params keeps the outer context', function () {
+      expectTemplate(
+        '{{#each outer as |o|}}{{#each inner as |i|}}{{o}}{{i}}{{suffix}}{{/each}}{{/each}}'
+      )
+        .withInput({ outer: ['a'], inner: ['1', '2'], suffix: '!' })
+        .toCompileTo('a1!a2!');
+    });
+
+    it('each with block params still exposes this as the outer context', function () {
+      expectTemplate('{{#each list as |item|}}{{this.name}}{{item}};{{/each}}')
+        .withInput({ name: 'outer', list: ['a'] })
+        .toCompileTo('outera;');
+    });
+
+    it('each with block params does not change the context when data is disabled', function () {
+      expectTemplate('{{#each list as |item|}}{{item}}:{{someVal}};{{/each}}')
+        .withCompileOptions({ data: false })
+        .withInput({ someVal: 'value', list: ['a'] })
+        .toCompileTo('a:value;');
+    });
+
+    it('each without block params still changes the current context', function () {
+      expectTemplate('{{#each list}}{{name}};{{/each}}')
+        .withInput({ list: [{ name: 'x' }] })
+        .toCompileTo('x;');
     });
 
     it('each with block params and strict compilation', function () {
@@ -526,6 +574,27 @@ describe('builtin helpers', function () {
       expectTemplate('{{#each map}}{{.}}{{/each}}not-in-each')
         .withInput({ map: new Map() })
         .toCompileTo('not-in-each');
+    });
+
+    it('each on Map with block params', function () {
+      var map = new Map([
+        ['a', { name: 'one' }],
+        ['b', { name: 'two' }],
+      ]);
+
+      expectTemplate(
+        '{{#each map as |value key|}}{{key}}={{value.name}};{{/each}}{{name}}'
+      )
+        .withInput({ map: map, name: 'outer' })
+        .toCompileTo('a=one;b=two;outer');
+    });
+
+    it('each on Set with block params', function () {
+      var set = new Set([1, 2]);
+
+      expectTemplate('{{#each set as |value|}}{{value}};{{/each}}{{name}}')
+        .withInput({ set: set, name: 'outer' })
+        .toCompileTo('1;2;outer');
     });
 
     it('each on Set', function () {
